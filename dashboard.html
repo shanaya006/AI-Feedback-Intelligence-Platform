@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Feedback Intelligence — Swiggy Review Analysis</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+  --bg:#14171a;
+  --surface:#1c2023;
+  --surface-raised:#23282c;
+  --ink:#f0ece3;
+  --ink-dim:#9aa1a6;
+  --ink-faint:#5c6469;
+  --line:#33393e;
+
+  --stamp:#ff5a3c;
+  --critical:#ff5a4e;
+  --high:#ffb020;
+  --medium:#4fa8e8;
+  --low:#4fd19a;
+  --unknown:#4c5257;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Inter',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+
+.mono{
+  font-family:'IBM Plex Mono',monospace;
+}
+
+.display{
+  font-family:'Space Grotesk',sans-serif;
+}
+
+/* ===== Top bar ===== */
+
+.topbar{
+  border-bottom:1px solid var(--line);
+  padding:18px 32px;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  position:sticky;
+  top:0;
+  z-index:10;
+
+  background:rgba(20,23,26,0.92);
+  backdrop-filter:blur(6px);
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.brand-mark{
+  width:10px;
+  height:10px;
+  border-radius:2px;
+  background:var(--stamp);
+  box-shadow:0 0 12px rgba(255,90,60,0.6);
+}
+
+.brand-name{
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:600;
+  font-size:15px;
+  letter-spacing:0.02em;
+}
+
+.brand-sub{
+  color:var(--ink-faint);
+  font-size:12px;
+  font-family:'IBM Plex Mono',monospace;
+}
+
+.topbar-right{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  color:var(--ink-faint);
+  text-align:right;
+}
+
+/* ===== Hero ===== */
+
+.hero{
+  padding:56px 32px 40px;
+  max-width:1180px;
+  margin:0 auto;
+}
+
+.eyebrow{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--stamp);
+  margin-bottom:14px;
+}
+
+.hero h1{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:clamp(28px,4vw,44px);
+  font-weight:600;
+  line-height:1.15;
+  margin:0 0 14px;
+  max-width:780px;
+}
+
+.hero p{
+  color:var(--ink-dim);
+  font-size:15px;
+  max-width:650px;
+  line-height:1.6;
+  margin:0 0 36px;
+}
+
+.ticker{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+
+  border:1px solid var(--line);
+  border-radius:10px;
+  overflow:hidden;
+
+  background:var(--surface);
+}
+
+.ticker-cell{
+  padding:22px 20px;
+  border-right:1px solid var(--line);
+}
+
+.ticker-cell:last-child{
+  border-right:none;
+}
+
+.ticker-label{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10.5px;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--ink-faint);
+  margin-bottom:8px;
+}
+
+.ticker-value{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:30px;
+  font-weight:600;
+}
+
+.ticker-value.c-critical{
+  color:var(--critical);
+}
+
+.ticker-value.c-stamp{
+  color:var(--stamp);
+}
+
+.ticker-note{
+  font-size:12px;
+  color:var(--ink-faint);
+  margin-top:6px;
+}
+
+/* ===== Sections ===== */
+
+.section{
+  max-width:1180px;
+  margin:0 auto;
+  padding:48px 32px;
+  border-top:1px solid var(--line);
+}
+
+.section-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  margin-bottom:28px;
+  flex-wrap:wrap;
+  gap:12px;
+}
+
+.section-title{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:20px;
+  font-weight:600;
+}
+
+.section-desc{
+  color:var(--ink-faint);
+  font-size:13px;
+  max-width:460px;
+}
+
+/* ===== Ticket cards ===== */
+
+.ticket-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
+  gap:18px;
+}
+
+.ticket{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:4px;
+
+  position:relative;
+  overflow:hidden;
+
+  transition:border-color .15s ease, transform .15s ease;
+}
+
+.ticket:hover{
+  border-color:var(--ink-faint);
+  transform:translateY(-2px);
+}
+
+.ticket::before{
+  content:"";
+
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+
+  height:5px;
+
+  background:var(--severity-color,var(--unknown));
+}
+
+.ticket::after{
+  content:"";
+
+  position:absolute;
+  top:5px;
+  left:0;
+  right:0;
+
+  height:1px;
+
+  background-image:radial-gradient(
+    circle,
+    var(--bg) 2px,
+    transparent 2.2px
+  );
+
+  background-size:14px 1px;
+  background-repeat:repeat-x;
+  background-position:0 -1px;
+}
+
+.ticket-body{
+  padding:20px 20px 18px;
+}
+
+.ticket-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:16px;
+}
+
+.ticket-topic{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:16px;
+  font-weight:600;
+  line-height:1.3;
+  max-width:170px;
+}
+
+.ticket-count{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  color:var(--ink-faint);
+  text-align:right;
+  white-space:nowrap;
+}
+
+.ticket-count b{
+  color:var(--ink);
+  font-size:15px;
+  display:block;
+  font-weight:600;
+}
+
+.ticket-rows{
+  border-top:1px dashed var(--line);
+  padding-top:14px;
+}
+
+.ticket-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  font-size:12.5px;
+  padding:4px 0;
+}
+
+.ticket-row .k{
+  color:var(--ink-faint);
+}
+
+.ticket-row .v{
+  font-family:'IBM Plex Mono',monospace;
+  font-weight:500;
+}
+
+.v.critical{
+  color:var(--critical);
+}
+
+.v.high{
+  color:var(--high);
+}
+
+.stack-bar{
+  display:flex;
+
+  height:6px;
+
+  border-radius:3px;
+  overflow:hidden;
+
+  margin-top:14px;
+
+  background:var(--surface-raised);
+}
+
+.stack-seg{
+  height:100%;
+}
+
+/* ===== Bar charts ===== */
+
+.barlist{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.bar-row{
+  display:grid;
+  grid-template-columns:150px 1fr 56px;
+  align-items:center;
+  gap:14px;
+}
+
+.bar-label{
+  font-size:13px;
+  color:var(--ink-dim);
+}
+
+.bar-track{
+  background:var(--surface);
+  border-radius:4px;
+  height:10px;
+  overflow:hidden;
+}
+
+.bar-fill{
+  height:100%;
+  border-radius:4px;
+}
+
+.bar-val{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  text-align:right;
+  color:var(--ink-faint);
+}
+
+/* ===== Legend ===== */
+
+.legend{
+  display:flex;
+  gap:18px;
+  flex-wrap:wrap;
+
+  font-size:12px;
+  color:var(--ink-faint);
+
+  margin-bottom:24px;
+}
+
+.legend span{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+
+.dot{
+  width:8px;
+  height:8px;
+  border-radius:2px;
+  display:inline-block;
+}
+
+/* ===== Insight callout ===== */
+
+.callout{
+  background:var(--surface);
+
+  border:1px solid var(--line);
+  border-left:3px solid var(--stamp);
+
+  border-radius:0 8px 8px 0;
+
+  padding:20px 24px;
+  margin-top:28px;
+
+  font-size:13.5px;
+  line-height:1.65;
+
+  color:var(--ink-dim);
+}
+
+.callout b{
+  color:var(--ink);
+  font-weight:600;
+}
+
+/* ===== Two columns ===== */
+
+.twocol{
+  display:grid;
+  grid-template-columns:1.1fr 0.9fr;
+  gap:40px;
+}
+
+/* ===== Competitors ===== */
+
+.comp-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  padding:12px 0;
+
+  border-bottom:1px solid var(--line);
+}
+
+.comp-row:last-child{
+  border-bottom:none;
+}
+
+.comp-name{
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:600;
+  font-size:14px;
+}
+
+.comp-meta{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  color:var(--ink-faint);
+}
+
+.comp-neg{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  color:var(--critical);
+}
+
+/* ===== Footer ===== */
+
+footer{
+  padding:32px;
+  text-align:center;
+
+  color:var(--ink-faint);
+  font-size:11.5px;
+
+  font-family:'IBM Plex Mono',monospace;
+
+  border-top:1px solid var(--line);
+}
+
+/* ===== Responsive ===== */
+
+@media(max-width:820px){
+
+  .twocol{
+    grid-template-columns:1fr;
+  }
+
+  .ticker{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .bar-row{
+    grid-template-columns:120px 1fr 50px;
+  }
+
+}
+
+@media(max-width:600px){
+
+  .topbar{
+    padding:16px 20px;
+  }
+
+  .topbar-right{
+    display:none;
+  }
+
+  .hero,
+  .section{
+    padding-left:20px;
+    padding-right:20px;
+  }
+
+  .ticker{
+    grid-template-columns:1fr;
+  }
+
+  .ticker-cell{
+    border-right:none;
+    border-bottom:1px solid var(--line);
+  }
+
+  .ticker-cell:last-child{
+    border-bottom:none;
+  }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- =========================================================
+     TOP BAR
+========================================================= -->
+
+<div class="topbar">
+
+  <div class="brand">
+
+    <span class="brand-mark"></span>
+
+    <div>
+      <div class="brand-name">
+        FEEDBACK INTELLIGENCE
+      </div>
+
+      <div class="brand-sub">
+        swiggy · review analysis
+      </div>
+    </div>
+
+  </div>
+
+  <div class="topbar-right">
+    880 REVIEWS PROCESSED<br>
+    GEMINI · SQLITE
+  </div>
+
+</div>
+
+
+<!-- =========================================================
+     HERO
+========================================================= -->
+
+<div class="hero">
+
+  <div class="eyebrow">
+    Dispatch Summary — All Topics
+  </div>
+
+  <h1>
+    What 880 customers actually said, sorted into what Product should act on first.
+  </h1>
+
+  <p>
+    Each review was processed through an LLM extraction pipeline to identify
+    sentiment, pain points, feature requests, topic, urgency and churn risk.
+    The resulting structured data was then aggregated using SQL to surface
+    product-level patterns.
+  </p>
+
+
+  <div class="ticker">
+
+    <div class="ticker-cell">
+
+      <div class="ticker-label">
+        Reviews Analyzed
+      </div>
+
+      <div class="ticker-value">
+        880
+      </div>
+
+      <div class="ticker-note">
+        sampled from ~205K raw reviews
+      </div>
+
+    </div>
+
+
+    <div class="ticker-cell">
+
+      <div class="ticker-label">
+        Negative Sentiment
+      </div>
+
+      <div class="ticker-value c-critical">
+        58%
+      </div>
+
+      <div class="ticker-note">
+        510 of 880 reviews
+      </div>
+
+    </div>
+
+
+    <div class="ticker-cell">
+
+      <div class="ticker-label">
+        Top Issue
+      </div>
+
+      <div class="ticker-value" style="font-size:22px;">
+        Delivery Time
+      </div>
+
+      <div class="ticker-note">
+        171 mentions · 106 negative
+      </div>
+
+    </div>
+
+
+    <div class="ticker-cell">
+
+      <div class="ticker-label">
+        High Churn-Risk
+      </div>
+
+      <div class="ticker-value c-stamp">
+        65
+      </div>
+
+      <div class="ticker-note">
+        explicit churn signals
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =========================================================
+     TOPIC BREAKDOWN
+========================================================= -->
+
+<div class="section">
+
+  <div class="section-head">
+
+    <div>
+
+      <div class="section-title">
+        Topic Breakdown
+      </div>
+
+      <div class="section-desc">
+        Each topic shows volume, negative rate, and the urgency mix behind it.
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="legend">
+
+    <span>
+      <i class="dot" style="background:var(--critical)"></i>
+      Critical
+    </span>
+
+    <span>
+      <i class="dot" style="background:var(--high)"></i>
+      High
+    </span>
+
+    <span>
+      <i class="dot" style="background:var(--medium)"></i>
+      Medium
+    </span>
+
+    <span>
+      <i class="dot" style="background:var(--low)"></i>
+      Low
+    </span>
+
+  </div>
+
+
+  <div class="ticket-grid" id="ticketGrid"></div>
+
+
+  <div class="callout">
+
+    <b>Volume ≠ severity.</b>
+
+    Delivery Time has the largest volume of reviews (171),
+    but only 34.5% are high or critical urgency.
+
+    Meanwhile, Customer Support and Refunds &amp; Payments have far fewer
+    mentions but 63.9% and 68.9% severe reviews respectively.
+
+    This distinction helps Product prioritize problems based on potential
+    impact, not complaint volume alone.
+
+  </div>
+
+</div>
+
+
+<!-- =========================================================
+     SEVERITY
+========================================================= -->
+
+<div class="section">
+
+  <div class="section-head">
+
+    <div>
+
+      <div class="section-title">
+        Severity Rate by Topic
+      </div>
+
+      <div class="section-desc">
+        Percentage of each topic's reviews rated high or critical urgency.
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="barlist" id="severityBars"></div>
+
+</div>
+
+
+<!-- =========================================================
+     COMPETITOR + FEATURE REQUESTS
+========================================================= -->
+
+<div class="section">
+
+  <div class="twocol">
+
+
+    <!-- COMPETITORS -->
+
+    <div>
+
+      <div class="section-title" style="margin-bottom:6px;">
+        Competitor Mentions
+      </div>
+
+      <div class="section-desc" style="margin-bottom:20px;">
+        Unprompted competitor references across the analyzed reviews.
+      </div>
+
+      <div id="compList"></div>
+
+    </div>
+
+
+    <!-- FEATURE REQUESTS -->
+
+    <div>
+
+      <div class="section-title" style="margin-bottom:6px;">
+        Feature Requests by Topic
+      </div>
+
+      <div class="section-desc" style="margin-bottom:20px;">
+        Topics where users explicitly or implicitly requested product changes.
+      </div>
+
+      <div class="barlist" id="featureBars"></div>
+
+    </div>
+
+  </div>
+
+
+  <div class="callout">
+
+    <b>Zomato dominates the competitive conversation.</b>
+
+    Zomato appears in 54 reviews, compared with only a handful of
+    mentions for other named competitors.
+
+    31 of those 54 Zomato mentions occur in reviews classified as negative,
+    suggesting that competitor references frequently appear alongside
+    dissatisfaction.
+
+  </div>
+
+</div>
+
+
+<!-- =========================================================
+     FOOTER
+========================================================= -->
+
+<footer>
+
+  BUILT FROM 880 GEMINI-EXTRACTED REVIEWS
+  · SQL AGGREGATION VIA SQLITE
+  · FEEDBACK INTELLIGENCE PLATFORM
+
+</footer>
+
+
+<script>
+
+/* =========================================================
+   SEVERITY COLORS
+========================================================= */
+
+const sevColors = {
+
+  critical:'var(--critical)',
+  high:'var(--high)',
+  medium:'var(--medium)',
+  low:'var(--low)'
+
+};
+
+
+/* =========================================================
+   TOPIC DATA
+   Source: your SQLite analysis
+========================================================= */
+
+const topics = [
+
+  {
+    name:'Delivery Time',
+    total:171,
+    neg:106,
+    negRate:62.0,
+    severe:59,
+    severeRate:34.5,
+    churn:16,
+    mix:{
+      critical:5,
+      high:54,
+      medium:53,
+      low:59
+    }
+  },
+
+  {
+    name:'Pricing & Offers',
+    total:165,
+    neg:74,
+    negRate:44.8,
+    severe:6,
+    severeRate:3.6,
+    churn:5,
+    mix:{
+      critical:0,
+      high:6,
+      medium:47,
+      low:112
+    }
+  },
+
+  {
+    name:'App Bugs/UX',
+    total:140,
+    neg:73,
+    negRate:52.1,
+    severe:26,
+    severeRate:18.6,
+    churn:4,
+    mix:{
+      critical:2,
+      high:24,
+      medium:44,
+      low:70
+    }
+  },
+
+  {
+    name:'Customer Support',
+    total:72,
+    neg:66,
+    negRate:91.7,
+    severe:46,
+    severeRate:63.9,
+    churn:11,
+    mix:{
+      critical:5,
+      high:41,
+      medium:19,
+      low:7
+    }
+  },
+
+  {
+    name:'Refunds & Payments',
+    total:74,
+    neg:64,
+    negRate:86.5,
+    severe:51,
+    severeRate:68.9,
+    churn:6,
+    mix:{
+      critical:31,
+      high:20,
+      medium:17,
+      low:6
+    }
+  },
+
+  {
+    name:'Restaurant Quality',
+    total:62,
+    neg:32,
+    negRate:51.6,
+    severe:18,
+    severeRate:29.0,
+    churn:7,
+    mix:{
+      critical:1,
+      high:17,
+      medium:13,
+      low:31
+    }
+  },
+
+  {
+    name:'Order Accuracy',
+    total:30,
+    neg:26,
+    negRate:86.7,
+    severe:21,
+    severeRate:70.0,
+    churn:2,
+    mix:{
+      critical:2,
+      high:19,
+      medium:8,
+      low:1
+    }
+  },
+
+  {
+    name:'Delivery Partner Behavior',
+    total:41,
+    neg:26,
+    negRate:63.4,
+    severe:20,
+    severeRate:48.8,
+    churn:3,
+    mix:{
+      critical:3,
+      high:17,
+      medium:9,
+      low:12
+    }
+  },
+
+  {
+    name:'Other',
+    total:99,
+    neg:22,
+    negRate:22.2,
+    severe:3,
+    severeRate:3.0,
+    churn:6,
+    mix:{
+      critical:0,
+      high:3,
+      medium:15,
+      low:81
+    }
+  },
+
+  {
+    name:'Account/Login',
+    total:11,
+    neg:11,
+    negRate:100.0,
+    severe:10,
+    severeRate:90.9,
+    churn:3,
+    mix:{
+      critical:6,
+      high:4,
+      medium:1,
+      low:0
+    }
+  },
+
+  {
+    name:'Instamart',
+    total:15,
+    neg:10,
+    negRate:66.7,
+    severe:7,
+    severeRate:46.7,
+    churn:2,
+    mix:{
+      critical:2,
+      high:5,
+      medium:4,
+      low:4
+    }
+  }
+
+];
+
+
+/* =========================================================
+   TOPIC CARDS
+========================================================= */
+
+const grid = document.getElementById('ticketGrid');
+
+topics
+  .slice()
+  .sort((a,b)=>b.total-a.total)
+  .forEach(t=>{
+
+    const dominant =
+      t.severeRate >= 50
+        ? 'critical'
+        : t.severeRate >= 25
+          ? 'high'
+          : t.severeRate >= 8
+            ? 'medium'
+            : 'low';
+
+
+    const div = document.createElement('div');
+
+    div.className = 'ticket';
+
+    div.style.setProperty(
+      '--severity-color',
+      sevColors[dominant]
+    );
+
+
+    div.innerHTML = `
+
+      <div class="ticket-body">
+
+        <div class="ticket-top">
+
+          <div class="ticket-topic">
+            ${t.name}
+          </div>
+
+          <div class="ticket-count">
+
+            <b>${t.total}</b>
+
+            reviews
+
+          </div>
+
+        </div>
+
+
+        <div class="ticket-rows">
+
+          <div class="ticket-row">
+
+            <span class="k">
+              Negative
+            </span>
+
+            <span class="v">
+              ${t.negRate}%
+            </span>
+
+          </div>
+
+
+          <div class="ticket-row">
+
+            <span class="k">
+              Severe (high/critical)
+            </span>
+
+            <span class="v ${
+              dominant === 'critical'
+                ? 'critical'
+                : dominant === 'high'
+                  ? 'high'
+                  : ''
+            }">
+
+              ${t.severeRate}%
+
+            </span>
+
+          </div>
+
+
+          <div class="ticket-row">
+
+            <span class="k">
+              High churn-risk
+            </span>
+
+            <span class="v">
+              ${t.churn}
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="stack-bar">
+
+          ${
+            ['critical','high','medium','low']
+              .map(k=>{
+
+                const pct =
+                  (t.mix[k] / t.total * 100)
+                  .toFixed(1);
+
+                return `
+
+                  <div
+                    class="stack-seg"
+                    style="
+                      width:${pct}%;
+                      background:${sevColors[k]}
+                    "
+                  ></div>
+
+                `;
+
+              })
+              .join('')
+          }
+
+        </div>
+
+      </div>
+
+    `;
+
+
+    grid.appendChild(div);
+
+  });
+
+
+/* =========================================================
+   SEVERITY BARS
+========================================================= */
+
+const sevBarWrap =
+  document.getElementById('severityBars');
+
+
+topics
+  .slice()
+  .sort((a,b)=>b.severeRate-a.severeRate)
+  .forEach(t=>{
+
+    const color =
+      t.severeRate >= 50
+        ? sevColors.critical
+        : t.severeRate >= 25
+          ? sevColors.high
+          : t.severeRate >= 8
+            ? sevColors.medium
+            : sevColors.low;
+
+
+    const row =
+      document.createElement('div');
+
+    row.className = 'bar-row';
+
+
+    row.innerHTML = `
+
+      <div class="bar-label">
+        ${t.name}
+      </div>
+
+      <div class="bar-track">
+
+        <div
+          class="bar-fill"
+          style="
+            width:${t.severeRate}%;
+            background:${color}
+          "
+        ></div>
+
+      </div>
+
+      <div class="bar-val">
+        ${t.severeRate}%
+      </div>
+
+    `;
+
+
+    sevBarWrap.appendChild(row);
+
+  });
+
+
+/* =========================================================
+   FEATURE REQUEST DATA
+   Source: your SQLite query
+========================================================= */
+
+const featureData = [
+
+  {
+    name:'App Bugs/UX',
+    count:91
+  },
+
+  {
+    name:'Pricing & Offers',
+    count:85
+  },
+
+  {
+    name:'Delivery Time',
+    count:77
+  },
+
+  {
+    name:'Refunds & Payments',
+    count:59
+  },
+
+  {
+    name:'Customer Support',
+    count:47
+  },
+
+  {
+    name:'Restaurant Quality',
+    count:24
+  },
+
+  {
+    name:'Delivery Partner Behavior',
+    count:23
+  },
+
+  {
+    name:'Order Accuracy',
+    count:21
+  },
+
+  {
+    name:'Other',
+    count:16
+  },
+
+  {
+    name:'Instamart',
+    count:12
+  },
+
+  {
+    name:'Account/Login',
+    count:10
+  }
+
+];
+
+
+const maxFeat =
+  Math.max(
+    ...featureData.map(f=>f.count)
+  );
+
+
+const featWrap =
+  document.getElementById('featureBars');
+
+
+featureData.forEach(f=>{
+
+  const row =
+    document.createElement('div');
+
+  row.className = 'bar-row';
+
+
+  row.innerHTML = `
+
+    <div class="bar-label">
+      ${f.name}
+    </div>
+
+    <div class="bar-track">
+
+      <div
+        class="bar-fill"
+        style="
+          width:${(f.count/maxFeat*100)}%;
+          background:var(--medium)
+        "
+      ></div>
+
+    </div>
+
+    <div class="bar-val">
+      ${f.count}
+    </div>
+
+  `;
+
+
+  featWrap.appendChild(row);
+
+});
+
+
+/* =========================================================
+   COMPETITOR DATA
+   Source: your SQLite query
+========================================================= */
+
+const competitors = [
+
+  {
+    name:'Zomato',
+    mentions:54,
+    neg:31
+  },
+
+  {
+    name:'Uber Eats',
+    mentions:3,
+    neg:2
+  },
+
+  {
+    name:'other apps',
+    mentions:3,
+    neg:2
+  },
+
+  {
+    name:'PhonePe',
+    mentions:2,
+    neg:2
+  },
+
+  {
+    name:'foodpanda',
+    mentions:1,
+    neg:1
+  },
+
+  {
+    name:'Zepto',
+    mentions:1,
+    neg:0
+  },
+
+  {
+    name:'Blinkit',
+    mentions:1,
+    neg:1
+  },
+
+  {
+    name:'Big Basket',
+    mentions:1,
+    neg:1
+  },
+
+  {
+    name:'Amazon Pay',
+    mentions:1,
+    neg:1
+  }
+
+];
+
+
+const compWrap =
+  document.getElementById('compList');
+
+
+competitors.forEach(c=>{
+
+  const row =
+    document.createElement('div');
+
+  row.className = 'comp-row';
+
+
+  row.innerHTML = `
+
+    <div>
+
+      <div class="comp-name">
+        ${c.name}
+      </div>
+
+      <div class="comp-meta">
+        ${c.mentions}
+        mention${c.mentions > 1 ? 's' : ''}
+      </div>
+
+    </div>
+
+
+    <div class="comp-neg">
+
+      ${c.neg}/${c.mentions}
+      negative
+
+    </div>
+
+  `;
+
+
+  compWrap.appendChild(row);
+
+});
+
+</script>
+
+</body>
+</html>
