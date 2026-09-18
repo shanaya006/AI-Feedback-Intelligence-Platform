@@ -45,6 +45,12 @@ Complaint volume alone did not indicate the highest-impact opportunity.
 
 The analysis highlighted **Refunds & Payments + Customer Support** as a connected opportunity in the post-order resolution journey.
 
+
+<img width="1470" height="956" alt="Screenshot 2026-09-19 at 12 22 53 AM" src="https://github.com/user-attachments/assets/7dfa8b2f-cf4f-49c1-8db9-009eead811b6" />
+<img width="1470" height="956" alt="Screenshot 2026-09-19 at 12 22 59 AM" src="https://github.com/user-attachments/assets/752246d7-b023-4fc8-a136-3a80cff0d65e" />
+<img width="1470" height="956" alt="Screenshot 2026-09-19 at 12 23 15 AM" src="https://github.com/user-attachments/assets/8f61fc06-6eba-4d4f-92dd-8852d8079388" />
+
+
 ---
 
 ## 💡 Product Proposal
